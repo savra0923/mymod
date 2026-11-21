@@ -13,14 +13,14 @@ static int __init mymod_init(void)
     printk(KERN_INFO "Hello, kernel!\n");
     printk(KERN_INFO "mymod has loaded\n");
 
-    err = alloc_chardev_region(&dev, 0, unites, "CourseDriver");
+    err = alloc_chrdev_region(&dev, 0, units, "CourseDriver");
 
     return 0;
 }
 
 static void __exit mymod_exit(void)
 {
-    unreqister_chardev_region(dev, units);
+    unregister_chrdev_region(dev, units);
     printk(KERN_INFO "Goodbye, kernel!\n");
 
     return;
