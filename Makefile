@@ -1,11 +1,13 @@
-ARCH = arm64
-CROSS_COMPILE = aarch64-linux-
+
 obj-m += mymod.o
-ROOTDIR=/home/student/rpi-buildroot-2026.08/output/build/linux-custom
 
-PWD = $(shell pwd)
-default:
-	$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) -C $(ROOTDIR) ARCH=$(ARCH) M=$(PWD) modules
+# Kernel build directory
+KDIR ?= /home/student/rpi-buildroot-2026.08/output/build/linux-custom
 
+# Build external kernel module
+all:
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
+
+# Clean generated files
 clean:
-	$(MAKE) CROSS_COMPILE=$(CROSS_COMPILE) -C $(ROOTDIR) ARCH=$(ARCH) M=$(PWD) clean
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
