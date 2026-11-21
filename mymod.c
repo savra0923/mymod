@@ -17,12 +17,28 @@ static int __init mymod_init(void)
     int err;
     
     printk(KERN_INFO "Hello, kernel!\n");
-    printk(KERN_INFO "mymod has loaded\n");
 
     err = alloc_chrdev_region(&dev, 0, units, "CourseDriver");
 
+    if (err < 0)
+    {
+        printk(KERN_ERR "failed to allocate device number\n");
+        return err;
+    }
+
+    printk(KERN_INFO "allocated major=%d minor=%d\n", MAJOR(dev), MINOR(dev));
+
     cdev_init(&my_cdev, &my_fops);
-    cdev_add(&my_cdev, dev, units);
+    err = cdev_add(&my_cdev, dev, units);
+
+    if (err < 0) 
+    {
+        printk(KERN_ERR "failed to add cdev\n");
+        unregister_chrdev_region(dev, units);
+        return err;
+    }
+
+    printk(KERN_INFO "cdev registered successfully\n");
 
     return 0;
 }
@@ -33,6 +49,7 @@ static void __exit mymod_exit(void)
 
     unregister_chrdev_region(dev, units);
     printk(KERN_INFO "Goodbye, kernel!\n");
+    printk(KERN_INFO "mymod unloaded\n");
 
     return;
 }
