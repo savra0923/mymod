@@ -10,3 +10,4 @@ tag v1.0 - Prepare module for Buildroot
 tag v2.1 - made device using alloc_chrdev. scped to pi
 tag v3.1 - added number allocation and driver
 tag v4.0 - added class and device
+tag v5.0 - added open and close
