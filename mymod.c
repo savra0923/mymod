@@ -17,8 +17,25 @@ static struct mod_private{
 }mod_private;
 static struct mod_private mod_private;
 
-static int my_open(struct inode *ino, struct file *file);
-static int my_release(struct inode *ino, struct file *file);
+static int my_open(struct inode *ino, struct file *flip)
+{
+    flip->private_data = container_of(ino->i_cdev, struct mod_private, mod_cdev);
+    open_count++;
+
+    printk(KERN_INFO "OPENING A FILE!\n");
+    printk(KERN_INFO "OPEN called %d times\n", open_count);
+
+    return 0;
+}
+
+static int my_release(struct inode *ino, struct file *file)
+{
+    printk(KERN_INFO "CLOSING A FILE!\n");
+    release_count++;
+    printk(KERN_INFO "RELEASE called %d times\n", release_count);
+
+    return 0;
+}
 
 static const struct file_operations my_fops = {
     .owner = THIS_MODULE,
@@ -89,24 +106,6 @@ static void __exit mymod_exit(void)
     printk(KERN_INFO "mymod unloaded\n");
 
     return;
-}
-
-static int my_open(struct inode *ino, struct file *flip)
-{
-    flip->private_data = container_of(ino->i_cdev, struct mod_private, mod_cdev);
-    open_count++;
-
-    printk(KERN_INFO "OPENING A FILE!\n");
-
-    return 0;
-}
-
-static int my_release(struct inode *ino, struct file *file)
-{
-    printk(KERN_INFO "CLOSING A FILE!\n");
-    release_count++;
-
-    return 0;
 }
 
 module_init(mymod_init);
