@@ -1,5 +1,5 @@
-ARCH = arm64
-CROSS_COMPILE = aarch64-linux-
+ARCH ?= arm64
+CROSS_COMPILE ?= aarch64-linux-
 obj-m += mymod.o
 ROOTDIR=/home/student/rpi-buildroot-2026.08/output/build/linux-custom
 

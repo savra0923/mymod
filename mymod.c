@@ -7,12 +7,23 @@
 
 static dev_t dev;
 static int units = 1;
-static struct cdev my_cdev;
-static struct class *cl;
-static struct device *device;
+static int open_count = 0;
+static int release_count = 0;
+
+static struct mod_private{
+    struct cdev mod_cdev;
+    struct class *mod_cl;
+    struct device *mod_device;
+}mod_private;
+static struct mod_private mod_private;
+
+static int my_open(struct inode *ino, struct file *file);
+static int my_release(struct inode *ino, struct file *file);
 
 static const struct file_operations my_fops = {
     .owner = THIS_MODULE,
+    .open = my_open,
+    .release = my_release,
 };
 
 static int __init mymod_init(void)
@@ -31,8 +42,8 @@ static int __init mymod_init(void)
 
     printk(KERN_INFO "allocated major=%d minor=%d\n", MAJOR(dev), MINOR(dev));
 
-    cdev_init(&my_cdev, &my_fops);
-    err = cdev_add(&my_cdev, dev, units);
+    cdev_init(&mod_private.mod_cdev, &my_fops);
+    err = cdev_add(&mod_private.mod_cdev, dev, units);
 
     if (err < 0) 
     {
@@ -43,19 +54,19 @@ static int __init mymod_init(void)
 
     printk(KERN_INFO "cdev registered successfully\n");
 
-    cl = class_create("Saps_class");
+    mod_private.mod_cl = class_create("Saps_class");
 
-    if(cl == 0)
+    if(mod_private.mod_cl == 0)
     {
         printk(KERN_ERR "failed to create a class\n");
         return err;
     }
 
-    printk(KERN_INFO "class by the name of Saps_class was created\n",);
+    printk(KERN_INFO "class by the name of Saps_class was created\n");
 
-    device = device_create(cl, NULL, dev, NULL, "Saps_dev");
+    mod_private.mod_device = device_create(mod_private.mod_cl, NULL, dev, NULL, "Saps_dev");
 
-    if(device == 0)
+    if(mod_private.mod_device == 0)
     {
         printk(KERN_ERR "failed to create a device\n");
         return err;
@@ -68,17 +79,34 @@ static int __init mymod_init(void)
 
 static void __exit mymod_exit(void)
 {
-    device_destroy(cl, dev);
-    class_destroy(cl);
+    device_destroy(mod_private.mod_cl, dev);
+    class_destroy(mod_private.mod_cl);
 
-
-    cdev_del(&my_cdev);
+    cdev_del(&mod_private.mod_cdev);
 
     unregister_chrdev_region(dev, units);
     printk(KERN_INFO "Goodbye, kernel!\n");
     printk(KERN_INFO "mymod unloaded\n");
 
     return;
+}
+
+static int my_open(struct inode *ino, struct file *flip)
+{
+    flip->private_data = container_of(ino->i_cdev, struct mod_private, mod_cdev);
+    open_count++;
+
+    printk(KERN_INFO "OPENING A FILE!\n");
+
+    return 0;
+}
+
+static int my_release(struct inode *ino, struct file *file)
+{
+    printk(KERN_INFO "CLOSING A FILE!\n");
+    release_count++;
+
+    return 0;
 }
 
 module_init(mymod_init);
